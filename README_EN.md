@@ -5,6 +5,7 @@
 Research Paper Suite is an auditable workflow prototype for the full research-paper lifecycle. Instead of compressing research writing into one oversized prompt, it stores paper entities, sources, revisions, and approvals as structured state that can be validated and replayed.
 
 - Current version: `0.2.2`
+- License: [Apache License 2.0](LICENSE)
 
 ```text
 LLM experts make semantic and writing judgments

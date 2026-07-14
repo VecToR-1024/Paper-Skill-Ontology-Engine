@@ -3,6 +3,8 @@ package_name: research-paper-suite
 package_version: "0.2.2"
 install_mode: clean_or_replace
 required_files:
+  - LICENSE
+  - NOTICE
   - SKILL.md
   - AGENTS.md
   - skill_manifest.yml
