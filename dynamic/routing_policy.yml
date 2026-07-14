@@ -1,0 +1,29 @@
+schema_version: "0.1.0"
+
+decision_contract: dynamic/route_decision_contract.md
+
+routing_style:
+  method: llm_context_wise
+  keyword_matching: disallowed_as_primary_method
+  suite_light_mode: false
+
+route_output:
+  root_key: route_decision
+  required_fields:
+    - route_id
+    - suite_triggered
+    - project_required
+    - workflow
+    - primary_expert
+    - invocation_mode
+    - allowed_actions
+    - rationale
+    - next_step
+
+next_step_types:
+  - direct_answer
+  - request_user_input
+  - prepare_expert_invocation
+  - prepare_review_run
+  - run_document_intake
+  - apply_action_proposals

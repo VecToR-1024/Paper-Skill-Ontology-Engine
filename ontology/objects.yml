@@ -1,0 +1,701 @@
+schema_version: "0.1.0"
+
+objects:
+  Paper:
+    description: "A research paper project."
+    primary_key: paper_id
+    common: base_object
+    properties:
+      paper_id:
+        type: id
+        required: true
+      title:
+        type: string
+        required: false
+      field:
+        type: string
+        required: false
+      stage:
+        type: enum
+        enum: PaperStage
+        required: true
+      main_claim:
+        type: text
+        required: false
+      target_venue_id:
+        type: ref
+        target: Venue
+        required: false
+
+  Section:
+    description: "A logical section of a paper."
+    primary_key: section_id
+    common: base_object
+    properties:
+      section_id:
+        type: id
+        required: true
+      paper_id:
+        type: ref
+        target: Paper
+        required: true
+      section_type:
+        type: enum
+        enum: SectionType
+        required: true
+      title:
+        type: string
+        required: false
+      content_path:
+        type: path
+        required: false
+      content:
+        type: text
+        required: false
+      order_index:
+        type: integer
+        required: false
+
+  Claim:
+    description: "A scientific or rhetorical claim made by the paper."
+    primary_key: claim_id
+    common: base_object
+    properties:
+      claim_id:
+        type: id
+        required: true
+      paper_id:
+        type: ref
+        target: Paper
+        required: true
+      section_id:
+        type: ref
+        target: Section
+        required: false
+      text:
+        type: text
+        required: true
+      strength:
+        type: enum
+        enum: ClaimStrength
+        required: true
+      location_hint:
+        type: string
+        required: false
+
+  Evidence:
+    description: "Evidence that supports, constrains, or challenges a claim."
+    primary_key: evidence_id
+    common: base_object
+    properties:
+      evidence_id:
+        type: id
+        required: true
+      paper_id:
+        type: ref
+        target: Paper
+        required: true
+      evidence_type:
+        type: enum
+        enum: EvidenceType
+        required: true
+      summary:
+        type: text
+        required: true
+      source_ref:
+        type: string
+        required: false
+      artifact_id:
+        type: ref
+        target: Artifact
+        required: false
+
+  ReasoningStep:
+    description: "A proof step, theoretical argument, interpretation, or other explicit reasoning unit that connects claims to support."
+    primary_key: reasoning_step_id
+    common: base_object
+    properties:
+      reasoning_step_id:
+        type: id
+        required: true
+      paper_id:
+        type: ref
+        target: Paper
+        required: true
+      section_id:
+        type: ref
+        target: Section
+        required: false
+      claim_id:
+        type: ref
+        target: Claim
+        required: false
+      reasoning_step_type:
+        type: enum
+        enum: ReasoningStepType
+        required: true
+      summary:
+        type: text
+        required: true
+      artifact_id:
+        type: ref
+        target: Artifact
+        required: false
+
+  Method:
+    description: "A method, model, preprocessing step, baseline, or evaluation procedure used by the paper."
+    primary_key: method_id
+    common: base_object
+    properties:
+      method_id:
+        type: id
+        required: true
+      paper_id:
+        type: ref
+        target: Paper
+        required: true
+      section_id:
+        type: ref
+        target: Section
+        required: false
+      name:
+        type: string
+        required: true
+      method_type:
+        type: enum
+        enum: MethodType
+        required: true
+      summary:
+        type: text
+        required: false
+      role_in_paper:
+        type: text
+        required: false
+
+  Dataset:
+    description: "A dataset, corpus, benchmark, or user-provided data source used by the paper."
+    primary_key: dataset_id
+    common: base_object
+    properties:
+      dataset_id:
+        type: id
+        required: true
+      paper_id:
+        type: ref
+        target: Paper
+        required: true
+      name:
+        type: string
+        required: true
+      dataset_role:
+        type: enum
+        enum: DatasetRole
+        required: true
+      source_uri:
+        type: uri
+        required: false
+      split_summary:
+        type: text
+        required: false
+      license:
+        type: string
+        required: false
+
+  Experiment:
+    description: "An experiment, evaluation run, ablation, or analysis that can produce results."
+    primary_key: experiment_id
+    common: base_object
+    properties:
+      experiment_id:
+        type: id
+        required: true
+      paper_id:
+        type: ref
+        target: Paper
+        required: true
+      section_id:
+        type: ref
+        target: Section
+        required: false
+      name:
+        type: string
+        required: true
+      experiment_type:
+        type: enum
+        enum: ExperimentType
+        required: true
+      purpose:
+        type: text
+        required: false
+      protocol_summary:
+        type: text
+        required: false
+
+  Metric:
+    description: "A quantitative or qualitative metric used to evaluate a method or result."
+    primary_key: metric_id
+    common: base_object
+    properties:
+      metric_id:
+        type: id
+        required: true
+      paper_id:
+        type: ref
+        target: Paper
+        required: true
+      name:
+        type: string
+        required: true
+      direction:
+        type: enum
+        enum: MetricDirection
+        required: true
+      unit:
+        type: string
+        required: false
+      description:
+        type: text
+        required: false
+
+  Result:
+    description: "A reported finding from an experiment, including numeric values or qualitative outcomes."
+    primary_key: result_id
+    common: base_object
+    properties:
+      result_id:
+        type: id
+        required: true
+      paper_id:
+        type: ref
+        target: Paper
+        required: true
+      experiment_id:
+        type: ref
+        target: Experiment
+        required: false
+      metric_id:
+        type: ref
+        target: Metric
+        required: false
+      method_id:
+        type: ref
+        target: Method
+        required: false
+      dataset_id:
+        type: ref
+        target: Dataset
+        required: false
+      result_kind:
+        type: enum
+        enum: ResultKind
+        required: true
+      value:
+        type: number
+        required: false
+      value_text:
+        type: text
+        required: false
+      summary:
+        type: text
+        required: true
+      artifact_id:
+        type: ref
+        target: Artifact
+        required: false
+
+  Citation:
+    description: "A cited work and its role in the paper."
+    primary_key: citation_id
+    common: base_object
+    properties:
+      citation_id:
+        type: id
+        required: true
+      paper_id:
+        type: ref
+        target: Paper
+        required: true
+      citation_key:
+        type: string
+        required: false
+      title:
+        type: string
+        required: false
+      authors:
+        type: string
+        required: false
+      year:
+        type: integer
+        required: false
+      uri:
+        type: uri
+        required: false
+      role:
+        type: enum
+        enum: CitationRole
+        required: false
+      verification_status:
+        type: enum
+        enum: CitationVerificationStatus
+        required: false
+      positioning_role:
+        type: enum
+        enum: LiteraturePositioningRole
+        required: false
+
+  Review:
+    description: "A review run or audit pass."
+    primary_key: review_id
+    common: base_object
+    properties:
+      review_id:
+        type: id
+        required: true
+      paper_id:
+        type: ref
+        target: Paper
+        required: true
+      review_type:
+        type: enum
+        enum: ReviewType
+        required: true
+      reviewer_role:
+        type: string
+        required: false
+      summary:
+        type: text
+        required: false
+
+  Issue:
+    description: "A concrete problem, risk, or improvement item found in the paper."
+    primary_key: issue_id
+    common: base_object
+    properties:
+      issue_id:
+        type: id
+        required: true
+      paper_id:
+        type: ref
+        target: Paper
+        required: true
+      category:
+        type: enum
+        enum: IssueCategory
+        required: true
+      severity:
+        type: enum
+        enum: IssueSeverity
+        required: true
+      previous_severity:
+        type: enum
+        enum: IssueSeverity
+        required: false
+      reclassification_reason:
+        type: text
+        required: false
+      issue_status:
+        type: enum
+        enum: IssueStatus
+        required: true
+      evidence:
+        type: text
+        required: true
+      suggested_action:
+        type: text
+        required: false
+      target_object_type:
+        type: enum
+        enum: IssueTargetType
+        required: false
+      target_object_id:
+        type: id
+        required: false
+      missing_literature_role:
+        type: enum
+        enum: LiteraturePositioningRole
+        required: false
+      section_id:
+        type: ref
+        target: Section
+        required: false
+      claim_id:
+        type: ref
+        target: Claim
+        required: false
+      review_id:
+        type: ref
+        target: Review
+        required: false
+
+  Decision:
+    description: "A human or system decision about an issue, claim, venue, or workflow gate."
+    primary_key: decision_id
+    common: base_object
+    properties:
+      decision_id:
+        type: id
+        required: true
+      paper_id:
+        type: ref
+        target: Paper
+        required: true
+      decision_type:
+        type: enum
+        enum: DecisionType
+        required: true
+      decision_status:
+        type: enum
+        enum: DecisionStatus
+        required: true
+      reason_summary:
+        type: text
+        required: true
+      human_required:
+        type: boolean
+        required: true
+      issue_id:
+        type: ref
+        target: Issue
+        required: false
+
+  Venue:
+    description: "A target publication venue or submission context."
+    primary_key: venue_id
+    common: base_object
+    properties:
+      venue_id:
+        type: id
+        required: true
+      name:
+        type: string
+        required: true
+      venue_type:
+        type: enum
+        enum: VenueType
+        required: true
+      year:
+        type: integer
+        required: false
+      profile_path:
+        type: path
+        required: false
+      guideline_uri:
+        type: uri
+        required: false
+
+  Extraction:
+    description: "A controlled document-intake run that converts a raw source artifact into normalized artifacts."
+    primary_key: extraction_id
+    common: base_object
+    properties:
+      extraction_id:
+        type: id
+        required: true
+      paper_id:
+        type: ref
+        target: Paper
+        required: true
+      source_artifact_id:
+        type: ref
+        target: Artifact
+        required: true
+      method:
+        type: enum
+        enum: ExtractionMethod
+        required: true
+      extraction_status:
+        type: enum
+        enum: ExtractionStatus
+        required: true
+      output_artifact_ids:
+        type: json
+        required: false
+      page_count:
+        type: integer
+        required: false
+      character_count:
+        type: integer
+        required: false
+      confidence:
+        type: number
+        required: false
+      warnings:
+        type: json
+        required: false
+
+  SearchRun:
+    description: "A recorded literature or source search execution."
+    primary_key: search_run_id
+    common: base_object
+    properties:
+      search_run_id:
+        type: id
+        required: true
+      paper_id:
+        type: ref
+        target: Paper
+        required: true
+      provider:
+        type: enum
+        enum: SearchProvider
+        required: true
+      query:
+        type: string
+        required: true
+      searched_at:
+        type: datetime
+        required: false
+      status:
+        type: enum
+        enum: SearchRunStatus
+        required: true
+      parameters:
+        type: json
+        required: false
+      artifact_id:
+        type: ref
+        target: Artifact
+        required: false
+
+  ExternalWork:
+    description: "A bibliographic or web work discovered through search before it is selected as a Citation."
+    primary_key: external_work_id
+    common: base_object
+    properties:
+      external_work_id:
+        type: id
+        required: true
+      title:
+        type: string
+        required: true
+      authors:
+        type: string
+        required: false
+      year:
+        type: integer
+        required: false
+      venue:
+        type: string
+        required: false
+      doi:
+        type: string
+        required: false
+      arxiv_id:
+        type: string
+        required: false
+      uri:
+        type: uri
+        required: false
+      abstract:
+        type: text
+        required: false
+      metadata_quality:
+        type: enum
+        enum: ExternalWorkMetadataQuality
+        required: false
+      metadata_source_uri:
+        type: uri
+        required: false
+      metadata_retrieved_at:
+        type: datetime
+        required: false
+      source_provider:
+        type: enum
+        enum: SearchProvider
+        required: true
+      provider_work_id:
+        type: string
+        required: false
+      metadata:
+        type: json
+        required: false
+
+  SearchResult:
+    description: "A ranked hit returned by a SearchRun."
+    primary_key: search_result_id
+    common: base_object
+    properties:
+      search_result_id:
+        type: id
+        required: true
+      paper_id:
+        type: ref
+        target: Paper
+        required: true
+      search_run_id:
+        type: ref
+        target: SearchRun
+        required: true
+      external_work_id:
+        type: ref
+        target: ExternalWork
+        required: true
+      rank:
+        type: integer
+        required: true
+      score:
+        type: number
+        required: false
+      snippet:
+        type: text
+        required: false
+
+  SourceSpan:
+    description: "A stable locator for a short text span inside a source or extracted artifact."
+    primary_key: source_span_id
+    common: base_object
+    properties:
+      source_span_id:
+        type: id
+        required: true
+      paper_id:
+        type: ref
+        target: Paper
+        required: true
+      artifact_id:
+        type: ref
+        target: Artifact
+        required: true
+      locator_type:
+        type: enum
+        enum: SourceLocatorType
+        required: true
+      locator:
+        type: json
+        required: true
+      text_excerpt:
+        type: text
+        required: false
+      text_hash:
+        type: string
+        required: true
+      extraction_id:
+        type: ref
+        target: Extraction
+        required: false
+
+  Artifact:
+    description: "A file or generated output associated with the paper project."
+    primary_key: artifact_id
+    common: base_object
+    properties:
+      artifact_id:
+        type: id
+        required: true
+      paper_id:
+        type: ref
+        target: Paper
+        required: true
+      artifact_type:
+        type: enum
+        enum: ArtifactType
+        required: true
+      path:
+        type: path
+        required: true
+      description:
+        type: text
+        required: false
+      produced_by:
+        type: string
+        required: false

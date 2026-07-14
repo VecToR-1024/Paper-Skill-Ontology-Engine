@@ -1,0 +1,573 @@
+schema_version: "0.1.0"
+
+action_types:
+  paper.created:
+    description: "Create a Paper object."
+    object_type: Paper
+    default_function: create_object
+    allowed_functions:
+      - create_object
+    approval_required: false
+    required_payload:
+      - paper_id
+      - stage
+    optional_payload:
+      - title
+      - field
+      - main_claim
+      - target_venue_id
+
+  paper.stage_changed:
+    description: "Change the workflow stage of a paper."
+    object_type: Paper
+    default_function: update_object
+    allowed_functions:
+      - update_object
+    approval_required: false
+    required_payload:
+      - stage
+    enum_payload:
+      stage: PaperStage
+
+  paper.target_venue_set:
+    description: "Set or change the target venue of a paper."
+    object_type: Paper
+    default_function: update_object
+    allowed_functions:
+      - update_object
+    approval_required: true
+    required_payload:
+      - target_venue_id
+
+  section.upserted:
+    description: "Create or update a paper section metadata record."
+    object_type: Section
+    default_function: upsert_object
+    allowed_functions:
+      - upsert_object
+    approval_required: false
+    required_payload:
+      - section_id
+      - paper_id
+      - section_type
+    optional_payload:
+      - title
+      - content_path
+      - content
+      - order_index
+    enum_payload:
+      section_type: SectionType
+
+  claim.created:
+    description: "Create a claim extracted from or proposed for the paper."
+    object_type: Claim
+    default_function: create_object
+    allowed_functions:
+      - create_object
+    approval_required: false
+    required_payload:
+      - claim_id
+      - paper_id
+      - text
+      - strength
+    optional_payload:
+      - section_id
+      - location_hint
+    enum_payload:
+      strength: ClaimStrength
+
+  claim.updated:
+    description: "Update a claim text or strength."
+    object_type: Claim
+    default_function: update_object
+    allowed_functions:
+      - update_object
+    approval_required: true
+    required_payload:
+      - claim_id
+    optional_payload:
+      - text
+      - strength
+      - location_hint
+    enum_payload:
+      strength: ClaimStrength
+
+  evidence.created:
+    description: "Create an evidence object."
+    object_type: Evidence
+    default_function: create_object
+    allowed_functions:
+      - create_object
+    approval_required: false
+    required_payload:
+      - evidence_id
+      - paper_id
+      - evidence_type
+      - summary
+    optional_payload:
+      - source_ref
+      - artifact_id
+    enum_payload:
+      evidence_type: EvidenceType
+
+  reasoning_step.created:
+    description: "Create an explicit proof step, theoretical argument, or interpretation unit."
+    object_type: ReasoningStep
+    default_function: create_object
+    allowed_functions:
+      - create_object
+    approval_required: false
+    required_payload:
+      - reasoning_step_id
+      - paper_id
+      - reasoning_step_type
+      - summary
+    optional_payload:
+      - section_id
+      - claim_id
+      - artifact_id
+    enum_payload:
+      reasoning_step_type: ReasoningStepType
+
+  method.created:
+    description: "Create a method, model, preprocessing step, baseline, or evaluation procedure."
+    object_type: Method
+    default_function: create_object
+    allowed_functions:
+      - create_object
+    approval_required: false
+    required_payload:
+      - method_id
+      - paper_id
+      - name
+      - method_type
+    optional_payload:
+      - section_id
+      - summary
+      - role_in_paper
+    enum_payload:
+      method_type: MethodType
+
+  dataset.created:
+    description: "Create a dataset, benchmark, corpus, or source data record."
+    object_type: Dataset
+    default_function: create_object
+    allowed_functions:
+      - create_object
+    approval_required: false
+    required_payload:
+      - dataset_id
+      - paper_id
+      - name
+      - dataset_role
+    optional_payload:
+      - source_uri
+      - split_summary
+      - license
+    enum_payload:
+      dataset_role: DatasetRole
+
+  experiment.created:
+    description: "Create an experiment, evaluation run, ablation, or analysis record."
+    object_type: Experiment
+    default_function: create_object
+    allowed_functions:
+      - create_object
+    approval_required: false
+    required_payload:
+      - experiment_id
+      - paper_id
+      - name
+      - experiment_type
+    optional_payload:
+      - section_id
+      - purpose
+      - protocol_summary
+    enum_payload:
+      experiment_type: ExperimentType
+
+  metric.created:
+    description: "Create an evaluation metric record."
+    object_type: Metric
+    default_function: create_object
+    allowed_functions:
+      - create_object
+    approval_required: false
+    required_payload:
+      - metric_id
+      - paper_id
+      - name
+      - direction
+    optional_payload:
+      - unit
+      - description
+    enum_payload:
+      direction: MetricDirection
+
+  result.created:
+    description: "Create a reported result or finding."
+    object_type: Result
+    default_function: create_object
+    allowed_functions:
+      - create_object
+    approval_required: false
+    required_payload:
+      - result_id
+      - paper_id
+      - result_kind
+      - summary
+    optional_payload:
+      - experiment_id
+      - metric_id
+      - method_id
+      - dataset_id
+      - value
+      - value_text
+      - artifact_id
+    enum_payload:
+      result_kind: ResultKind
+
+  citation.created:
+    description: "Create a citation object."
+    object_type: Citation
+    default_function: create_object
+    allowed_functions:
+      - create_object
+    approval_required: false
+    required_payload:
+      - citation_id
+      - paper_id
+    optional_payload:
+      - citation_key
+      - title
+      - authors
+      - year
+      - uri
+      - role
+      - verification_status
+      - positioning_role
+    enum_payload:
+      role: CitationRole
+      verification_status: CitationVerificationStatus
+      positioning_role: LiteraturePositioningRole
+
+  search_run.created:
+    description: "Record a literature or source search execution."
+    object_type: SearchRun
+    default_function: create_object
+    allowed_functions:
+      - create_object
+      - import_search_results
+    approval_required: false
+    required_payload:
+      - search_run_id
+      - paper_id
+      - provider
+      - query
+      - status
+    optional_payload:
+      - searched_at
+      - parameters
+      - artifact_id
+    enum_payload:
+      provider: SearchProvider
+      status: SearchRunStatus
+
+  external_work.upserted:
+    description: "Create or update a discovered external bibliographic or web work."
+    object_type: ExternalWork
+    default_function: upsert_object
+    allowed_functions:
+      - upsert_object
+      - import_search_results
+    approval_required: false
+    required_payload:
+      - external_work_id
+      - title
+      - source_provider
+    optional_payload:
+      - authors
+      - year
+      - venue
+      - doi
+      - arxiv_id
+      - uri
+      - abstract
+      - metadata_quality
+      - metadata_source_uri
+      - metadata_retrieved_at
+      - provider_work_id
+      - metadata
+    enum_payload:
+      source_provider: SearchProvider
+      metadata_quality: ExternalWorkMetadataQuality
+
+  search_result.created:
+    description: "Record a ranked result from a SearchRun."
+    object_type: SearchResult
+    default_function: create_object
+    allowed_functions:
+      - create_object
+      - import_search_results
+    approval_required: false
+    required_payload:
+      - search_result_id
+      - paper_id
+      - search_run_id
+      - external_work_id
+      - rank
+    optional_payload:
+      - score
+      - snippet
+
+  venue.created:
+    description: "Create a venue profile object."
+    object_type: Venue
+    default_function: create_object
+    allowed_functions:
+      - create_object
+    approval_required: false
+    required_payload:
+      - venue_id
+      - name
+      - venue_type
+    optional_payload:
+      - year
+      - profile_path
+      - guideline_uri
+    enum_payload:
+      venue_type: VenueType
+
+  review.created:
+    description: "Create a review run record."
+    object_type: Review
+    default_function: create_object
+    allowed_functions:
+      - create_object
+    approval_required: false
+    required_payload:
+      - review_id
+      - paper_id
+      - review_type
+    optional_payload:
+      - reviewer_role
+      - summary
+    enum_payload:
+      review_type: ReviewType
+
+  issue.created:
+    description: "Create a concrete issue found by an expert or workflow."
+    object_type: Issue
+    default_function: create_object
+    allowed_functions:
+      - create_object
+    approval_required: false
+    required_payload:
+      - issue_id
+      - paper_id
+      - category
+      - severity
+      - issue_status
+      - evidence
+    optional_payload:
+      - suggested_action
+      - target_object_type
+      - target_object_id
+      - missing_literature_role
+      - section_id
+      - claim_id
+      - review_id
+    enum_payload:
+      category: IssueCategory
+      severity: IssueSeverity
+      issue_status: IssueStatus
+      target_object_type: IssueTargetType
+      missing_literature_role: LiteraturePositioningRole
+
+  issue.status_changed:
+    description: "Change issue workflow status."
+    object_type: Issue
+    default_function: update_object
+    allowed_functions:
+      - update_object
+    approval_required: true
+    required_payload:
+      - issue_id
+      - issue_status
+    enum_payload:
+      issue_status: IssueStatus
+
+  issue.severity_changed:
+    description: "Reclassify an issue's current severity while preserving the prior severity in the event log."
+    object_type: Issue
+    default_function: update_object
+    allowed_functions:
+      - update_object
+    approval_required: true
+    required_payload:
+      - issue_id
+      - previous_severity
+      - severity
+      - reclassification_reason
+    enum_payload:
+      previous_severity: IssueSeverity
+      severity: IssueSeverity
+
+  decision.proposed:
+    description: "Record a proposed decision that may require human approval."
+    object_type: Decision
+    default_function: create_object
+    allowed_functions:
+      - create_object
+    approval_required: false
+    required_payload:
+      - decision_id
+      - paper_id
+      - decision_type
+      - decision_status
+      - reason_summary
+      - human_required
+    optional_payload:
+      - issue_id
+    enum_payload:
+      decision_type: DecisionType
+      decision_status: DecisionStatus
+
+  decision.recorded:
+    description: "Record a human-approved or human-rejected decision."
+    object_type: Decision
+    default_function: update_object
+    allowed_functions:
+      - update_object
+    approval_required: true
+    required_payload:
+      - decision_id
+      - decision_status
+      - reason_summary
+    enum_payload:
+      decision_status: DecisionStatus
+
+  artifact.created:
+    description: "Create an artifact record for a generated or user-provided file."
+    object_type: Artifact
+    default_function: create_object
+    allowed_functions:
+      - create_object
+      - export_bib_from_state
+    approval_required: false
+    required_payload:
+      - artifact_id
+      - paper_id
+      - artifact_type
+      - path
+    optional_payload:
+      - description
+      - produced_by
+    enum_payload:
+      artifact_type: ArtifactType
+
+  extraction.created:
+    description: "Record a controlled document-intake extraction run."
+    object_type: Extraction
+    default_function: create_object
+    allowed_functions:
+      - create_object
+    approval_required: false
+    required_payload:
+      - extraction_id
+      - paper_id
+      - source_artifact_id
+      - method
+      - extraction_status
+    optional_payload:
+      - output_artifact_ids
+      - page_count
+      - character_count
+      - confidence
+      - warnings
+    enum_payload:
+      method: ExtractionMethod
+      extraction_status: ExtractionStatus
+
+  source_span.created:
+    description: "Create a stable locator for text inside a source or extracted artifact."
+    object_type: SourceSpan
+    default_function: create_object
+    allowed_functions:
+      - create_object
+    approval_required: false
+    required_payload:
+      - source_span_id
+      - paper_id
+      - artifact_id
+      - locator_type
+      - locator
+      - text_hash
+    optional_payload:
+      - text_excerpt
+      - extraction_id
+    enum_payload:
+      locator_type: SourceLocatorType
+
+  checkpoint.created:
+    description: "Record a human-approved checkpoint state and the archived source event log."
+    object_type: Artifact
+    default_function: create_checkpoint
+    allowed_functions:
+      - create_checkpoint
+    approval_required: true
+    required_payload:
+      - artifact_id
+      - paper_id
+      - artifact_type
+      - path
+      - checkpoint_id
+      - source_event_log
+      - source_event_log_sha256
+      - source_event_count
+      - approved_by
+      - summary
+    optional_payload:
+      - archived_event_log
+      - checkpoint_epoch
+      - produced_by
+    enum_payload:
+      artifact_type: ArtifactType
+
+  link.created:
+    description: "Create a link between two semantic objects."
+    object_type: Link
+    default_function: create_link
+    allowed_functions:
+      - create_link
+    approval_required: false
+    required_payload:
+      - link_type
+      - from_object_type
+      - from_object_id
+      - to_object_type
+      - to_object_id
+
+  link.removed:
+    description: "Remove or deactivate a link between two semantic objects."
+    object_type: Link
+    default_function: remove_link
+    allowed_functions:
+      - remove_link
+    approval_required: true
+    required_payload:
+      - link_type
+      - from_object_type
+      - from_object_id
+      - to_object_type
+      - to_object_id
+
+  submission.finalized:
+    description: "Mark a paper as ready for final submission."
+    object_type: Paper
+    default_function: finalize_submission
+    allowed_functions:
+      - finalize_submission
+    approval_required: true
+    required_payload:
+      - paper_id

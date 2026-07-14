@@ -1,0 +1,291 @@
+schema_version: "0.1.0"
+
+functions:
+  validate_event:
+    description: "Validate event envelope and action-specific payload."
+    deterministic: true
+    inputs:
+      - event
+      - event_schema
+      - actions
+      - ontology
+    outputs:
+      - validation_result
+
+  append_event:
+    description: "Append a validated event to the project event log."
+    deterministic: true
+    inputs:
+      - event
+      - event_log
+    outputs:
+      - event_log
+    invariants:
+      - offset_is_monotonic
+      - event_id_matches_offset
+
+  apply_event_to_state:
+    description: "Apply one event to the current state projection."
+    deterministic: true
+    inputs:
+      - event
+      - state_snapshot
+    outputs:
+      - state_snapshot
+
+  project_event_log:
+    description: "Replay event log to produce state projection."
+    deterministic: true
+    inputs:
+      - event_log
+    outputs:
+      - state_snapshot
+
+  create_checkpoint:
+    description: "Create a human-approved state checkpoint and start a new event-log epoch."
+    deterministic: true
+    inputs:
+      - event_log
+      - state_snapshot
+      - approval_record
+    outputs:
+      - checkpoint_snapshot
+      - archived_event_log
+      - new_event_log
+    invariants:
+      - source_event_log_hash_recorded
+      - checkpoint_path_recorded
+      - old_event_log_archived
+
+  create_object:
+    description: "Create an object in state projection."
+    deterministic: true
+    inputs:
+      - event
+      - state_snapshot
+    outputs:
+      - state_snapshot
+
+  upsert_object:
+    description: "Create or update an object in state projection."
+    deterministic: true
+    inputs:
+      - event
+      - state_snapshot
+    outputs:
+      - state_snapshot
+
+  update_object:
+    description: "Update an existing object in state projection."
+    deterministic: true
+    inputs:
+      - event
+      - state_snapshot
+    outputs:
+      - state_snapshot
+
+  create_link:
+    description: "Create a link in state projection."
+    deterministic: true
+    inputs:
+      - event
+      - state_snapshot
+    outputs:
+      - state_snapshot
+
+  remove_link:
+    description: "Deactivate or remove a link in state projection."
+    deterministic: true
+    inputs:
+      - event
+      - state_snapshot
+    outputs:
+      - state_snapshot
+
+  finalize_submission:
+    description: "Apply submission finalization gates."
+    deterministic: true
+    inputs:
+      - event
+      - state_snapshot
+      - constraints
+    outputs:
+      - state_snapshot
+      - gate_result
+
+  lookup_venue_profile:
+    description: "List or find cached venue profiles for venue_expert."
+    deterministic: true
+    inputs:
+      - venue_query
+      - venue_profile_library
+    outputs:
+      - venue_profile_matches
+
+  prepare_expert_invocation:
+    description: "Freeze state and create an isolated single-expert worker packet."
+    deterministic: true
+    inputs:
+      - project_dir
+      - expert_name
+      - state_snapshot
+      - invocation_policy
+    outputs:
+      - expert_invocation_dir
+      - input_snapshot
+      - runner_manifest
+      - worker_packet
+
+  record_expert_execution:
+    description: "Record the actual worker backend and verified isolation status after an expert invocation runs."
+    deterministic: true
+    inputs:
+      - expert_invocation_dir
+      - execution_backend
+      - recorded_by
+      - fallback_reason
+    outputs:
+      - updated_runner_manifest
+
+  run_isolated_expert:
+    description: "Runtime adapter hook for an isolated single-expert worker."
+    deterministic: false
+    inputs:
+      - expert_invocation_dir
+      - runner_manifest
+      - worker_backend
+    outputs:
+      - report
+      - proposals
+
+  prepare_review_run:
+    description: "Freeze a paper state snapshot and create role packets for mock review."
+    deterministic: true
+    inputs:
+      - project_dir
+      - state_snapshot
+      - review_role_reference
+    outputs:
+      - review_run_dir
+      - input_snapshot
+      - role_packets
+      - runner_manifest
+
+  run_multi_agent_review:
+    description: "Runtime adapter hook for true multi-agent or fallback review execution."
+    deterministic: false
+    inputs:
+      - review_run_dir
+      - role_packets
+      - runner_backend
+    outputs:
+      - role_reports
+      - role_proposal_drafts
+
+  aggregate_review_reports:
+    description: "Aggregate independent reviewer outputs into final review proposals."
+    deterministic: true
+    inputs:
+      - review_run_dir
+      - role_outputs
+      - aggregation_policy
+    outputs:
+      - aggregate_report
+      - proposals
+
+  ingest_pdf_project:
+    description: "Create a paper project from a source PDF through the controlled document-intake path."
+    deterministic: true
+    inputs:
+      - source_pdf
+      - project_dir
+      - paper_id
+    outputs:
+      - source_pdf_artifact
+      - extracted_text_artifact
+      - extraction_report_artifact
+      - extraction_object
+      - event_log
+      - state_snapshot
+
+  extract_pdf_text:
+    description: "Extract text from a PDF when a configured extractor is available."
+    deterministic: true
+    inputs:
+      - source_pdf
+      - extractor_policy
+    outputs:
+      - extracted_text
+      - extraction_method
+      - extraction_warnings
+
+  create_extraction_report:
+    description: "Write a machine-readable report for a document-intake run."
+    deterministic: true
+    inputs:
+      - source_artifact
+      - extraction_outputs
+      - extraction_warnings
+    outputs:
+      - extraction_report
+
+  extract_source_spans:
+    description: "Create source_span.created proposals from a recorded text artifact by splitting it into stable text blocks."
+    deterministic: true
+    inputs:
+      - project_dir
+      - artifact_id
+      - state_snapshot
+    outputs:
+      - source_span_proposals
+
+  import_search_results:
+    description: "Normalize structured literature or web search results into SearchRun, ExternalWork, and SearchResult proposals."
+    deterministic: true
+    inputs:
+      - project_dir
+      - search_results_file
+      - state_snapshot
+    outputs:
+      - search_result_proposals
+
+  validate_literature_coverage:
+    description: "Require predecessor, competitor, extension, and limitation coverage or a targeted open citation-gap issue."
+    deterministic: true
+    inputs:
+      - state_snapshot
+      - literature_coverage_policy
+    outputs:
+      - literature_coverage_report
+
+  import_work_metadata:
+    description: "Record an auditable metadata source artifact and enrich an existing ExternalWork."
+    deterministic: true
+    inputs:
+      - project_dir
+      - external_work_id
+      - metadata_source_file
+      - state_snapshot
+    outputs:
+      - metadata_artifact
+      - external_work_update_proposals
+
+  fetch_search_results:
+    description: "Fetch scholarly search results from a configured external metadata provider into an importable YAML artifact."
+    deterministic: false
+    inputs:
+      - provider
+      - query
+      - provider_runtime_config
+    outputs:
+      - search_results_file
+
+  export_bib_from_state:
+    description: "Export Citation objects from projected state into a BibTeX bibliography artifact."
+    deterministic: true
+    inputs:
+      - project_dir
+      - state_snapshot
+      - citation_objects
+    outputs:
+      - bibliography_bib_artifact

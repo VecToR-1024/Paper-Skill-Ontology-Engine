@@ -1,0 +1,253 @@
+schema_version: "0.1.0"
+
+experts:
+  positioning_expert:
+    actor: positioning_expert
+    brief_path: dynamic/experts/positioning.md
+    purpose: "Clarify research gap, contribution, competition, and positioning."
+    reads:
+      - Paper
+      - Section
+      - Claim
+      - ReasoningStep
+      - Citation
+      - ExternalWork
+      - SearchRun
+      - SearchResult
+      - SourceSpan
+      - Venue
+      - Method
+      - Dataset
+      - Experiment
+      - Metric
+      - Result
+    writes:
+      - Claim
+      - Evidence
+      - ReasoningStep
+      - Method
+      - Dataset
+      - Experiment
+      - Metric
+      - Result
+      - Citation
+      - Issue
+      - Decision
+      - Artifact
+    may_emit_actions:
+      - claim.created
+      - claim.updated
+      - evidence.created
+      - reasoning_step.created
+      - method.created
+      - dataset.created
+      - experiment.created
+      - metric.created
+      - result.created
+      - citation.created
+      - issue.created
+      - issue.severity_changed
+      - link.created
+      - decision.proposed
+      - artifact.created
+
+  writing_expert:
+    actor: writing_expert
+    brief_path: dynamic/experts/writing.md
+    purpose: "Draft, rewrite, tighten claims, and produce paper-facing prose."
+    reads:
+      - Paper
+      - Section
+      - Claim
+      - Evidence
+      - ReasoningStep
+      - Citation
+      - ExternalWork
+      - SearchRun
+      - SearchResult
+      - Issue
+      - Venue
+      - Method
+      - Dataset
+      - Experiment
+      - Metric
+      - Result
+      - Artifact
+      - SourceSpan
+    writes:
+      - Section
+      - Claim
+      - ReasoningStep
+      - Method
+      - Dataset
+      - Experiment
+      - Metric
+      - Result
+      - Artifact
+      - Issue
+    may_emit_actions:
+      - section.upserted
+      - claim.created
+      - claim.updated
+      - reasoning_step.created
+      - method.created
+      - dataset.created
+      - experiment.created
+      - metric.created
+      - result.created
+      - issue.created
+      - issue.status_changed
+      - issue.severity_changed
+      - artifact.created
+
+  style_expert:
+    actor: style_expert
+    brief_path: dynamic/experts/style.md
+    purpose: "Check prose, structure, rule violations, and mechanical writing risks."
+    reads:
+      - Paper
+      - Section
+      - Claim
+      - ReasoningStep
+      - Evidence
+      - Citation
+      - ExternalWork
+      - SearchRun
+      - SearchResult
+      - Method
+      - Dataset
+      - Experiment
+      - Metric
+      - Result
+      - SourceSpan
+    writes:
+      - Review
+      - Issue
+      - Artifact
+    may_emit_actions:
+      - review.created
+      - issue.created
+      - issue.severity_changed
+      - artifact.created
+
+  venue_expert:
+    actor: venue_expert
+    brief_path: dynamic/experts/venue.md
+    purpose: "Create or interpret venue profiles and submission constraints."
+    reads:
+      - Paper
+      - Venue
+      - Section
+      - Artifact
+      - SourceSpan
+      - ExternalWork
+      - SearchRun
+      - SearchResult
+    writes:
+      - Paper
+      - Venue
+      - Issue
+      - Decision
+      - Artifact
+    may_emit_actions:
+      - venue.created
+      - paper.target_venue_set
+      - issue.created
+      - issue.severity_changed
+      - decision.proposed
+      - artifact.created
+
+  review_expert:
+    actor: review_expert
+    brief_path: dynamic/experts/review.md
+    purpose: "Perform cold-read review, claim-evidence audit, mock peer review, and risk ranking."
+    multi_agent_preferred: true
+    reads:
+      - Paper
+      - Section
+      - Claim
+      - ReasoningStep
+      - Evidence
+      - Citation
+      - ExternalWork
+      - SearchRun
+      - SearchResult
+      - Method
+      - Dataset
+      - Experiment
+      - Metric
+      - Result
+      - SourceSpan
+      - Venue
+      - Issue
+    writes:
+      - Review
+      - Issue
+      - Decision
+      - Artifact
+    may_emit_actions:
+      - review.created
+      - issue.created
+      - issue.severity_changed
+      - decision.proposed
+      - artifact.created
+
+  rebuttal_expert:
+    actor: rebuttal_expert
+    brief_path: dynamic/experts/rebuttal.md
+    purpose: "Classify reviewer comments, map evidence, and draft response strategy."
+    reads:
+      - Paper
+      - Section
+      - Claim
+      - ReasoningStep
+      - Evidence
+      - Citation
+      - ExternalWork
+      - SearchRun
+      - SearchResult
+      - Result
+      - Review
+      - Issue
+      - Decision
+      - Artifact
+      - SourceSpan
+    writes:
+      - Review
+      - Decision
+      - Issue
+      - Artifact
+    may_emit_actions:
+      - review.created
+      - decision.proposed
+      - decision.recorded
+      - issue.created
+      - issue.status_changed
+      - issue.severity_changed
+      - artifact.created
+
+  assembly_expert:
+    actor: assembly_expert
+    brief_path: dynamic/experts/assembly.md
+    purpose: "Assemble manuscript artifacts and check final submission readiness."
+    reads:
+      - Paper
+      - Section
+      - Venue
+      - Issue
+      - Artifact
+      - SourceSpan
+      - Decision
+      - ExternalWork
+      - SearchRun
+      - SearchResult
+    writes:
+      - Artifact
+      - Issue
+      - Decision
+    may_emit_actions:
+      - artifact.created
+      - issue.created
+      - issue.severity_changed
+      - decision.proposed
+      - submission.finalized

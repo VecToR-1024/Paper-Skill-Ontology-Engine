@@ -1,0 +1,17 @@
+# Local runtime secrets and environment overrides.
+.env
+.env.local
+.env.*.local
+secrets.local.yml
+secrets.local.yaml
+secrets.local.json
+.credentials/
+.secrets/
+
+# Python/runtime cache.
+__pycache__/
+.pytest_cache/
+*.py[cod]
+
+# Local test scratch space.
+tests/tmp/

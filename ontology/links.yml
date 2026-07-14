@@ -1,0 +1,272 @@
+schema_version: "0.1.0"
+
+links:
+  paper_has_section:
+    from: Paper
+    to: Section
+    cardinality: one_to_many
+    inverse: section_belongs_to_paper
+
+  paper_targets_venue:
+    from: Paper
+    to: Venue
+    cardinality: many_to_one
+    inverse: venue_targeted_by_paper
+
+  section_contains_claim:
+    from: Section
+    to: Claim
+    cardinality: one_to_many
+    inverse: claim_appears_in_section
+
+  claim_supported_by_evidence:
+    from: Claim
+    to: Evidence
+    cardinality: many_to_many
+    inverse: evidence_supports_claim
+
+  claim_supported_by_reasoning_step:
+    from: Claim
+    to: ReasoningStep
+    cardinality: many_to_many
+    inverse: reasoning_step_supports_claim
+
+  claim_supported_by_result:
+    from: Claim
+    to: Result
+    cardinality: many_to_many
+    inverse: result_supports_claim
+
+  claim_uses_citation:
+    from: Claim
+    to: Citation
+    cardinality: many_to_many
+    inverse: citation_used_by_claim
+
+  section_describes_method:
+    from: Section
+    to: Method
+    cardinality: one_to_many
+    inverse: method_described_in_section
+
+  section_reports_experiment:
+    from: Section
+    to: Experiment
+    cardinality: one_to_many
+    inverse: experiment_reported_in_section
+
+  section_reports_result:
+    from: Section
+    to: Result
+    cardinality: one_to_many
+    inverse: result_reported_in_section
+
+  method_uses_dataset:
+    from: Method
+    to: Dataset
+    cardinality: many_to_many
+    inverse: dataset_used_by_method
+
+  experiment_evaluates_method:
+    from: Experiment
+    to: Method
+    cardinality: many_to_many
+    inverse: method_evaluated_by_experiment
+
+  experiment_uses_dataset:
+    from: Experiment
+    to: Dataset
+    cardinality: many_to_many
+    inverse: dataset_used_by_experiment
+
+  experiment_reports_result:
+    from: Experiment
+    to: Result
+    cardinality: one_to_many
+    inverse: result_reported_by_experiment
+
+  result_measures_metric:
+    from: Result
+    to: Metric
+    cardinality: many_to_one
+    inverse: metric_measured_by_result
+
+  result_for_method:
+    from: Result
+    to: Method
+    cardinality: many_to_one
+    inverse: method_has_result
+
+  result_on_dataset:
+    from: Result
+    to: Dataset
+    cardinality: many_to_one
+    inverse: dataset_has_result
+
+  evidence_derived_from_result:
+    from: Evidence
+    to: Result
+    cardinality: many_to_one
+    inverse: result_provides_evidence
+
+  evidence_derived_from_reasoning_step:
+    from: Evidence
+    to: ReasoningStep
+    cardinality: many_to_one
+    inverse: reasoning_step_provides_evidence
+
+  evidence_uses_citation:
+    from: Evidence
+    to: Citation
+    cardinality: many_to_many
+    inverse: citation_used_by_evidence
+
+  review_produces_issue:
+    from: Review
+    to: Issue
+    cardinality: one_to_many
+    inverse: issue_produced_by_review
+
+  issue_refers_to_section:
+    from: Issue
+    to: Section
+    cardinality: many_to_one
+    inverse: section_has_issue
+
+  issue_refers_to_claim:
+    from: Issue
+    to: Claim
+    cardinality: many_to_one
+    inverse: claim_has_issue
+
+  issue_targets_object:
+    from: Issue
+    to:
+      - Paper
+      - Section
+      - Claim
+      - Evidence
+      - ReasoningStep
+      - Method
+      - Dataset
+      - Experiment
+      - Metric
+      - Result
+      - Citation
+      - Venue
+      - SearchRun
+      - ExternalWork
+      - SearchResult
+      - SourceSpan
+      - Extraction
+      - Artifact
+    cardinality: many_to_one
+    inverse: object_has_issue
+
+  decision_resolves_issue:
+    from: Decision
+    to: Issue
+    cardinality: many_to_one
+    inverse: issue_resolved_by_decision
+
+  artifact_represents_paper:
+    from: Artifact
+    to: Paper
+    cardinality: many_to_one
+    inverse: paper_has_artifact
+
+  artifact_represents_section:
+    from: Artifact
+    to: Section
+    cardinality: many_to_one
+    inverse: section_has_artifact
+
+  artifact_represents_review:
+    from: Artifact
+    to: Review
+    cardinality: many_to_one
+    inverse: review_has_artifact
+
+  artifact_represents_decision:
+    from: Artifact
+    to: Decision
+    cardinality: many_to_one
+    inverse: decision_has_artifact
+
+  artifact_represents_dataset:
+    from: Artifact
+    to: Dataset
+    cardinality: many_to_one
+    inverse: dataset_has_artifact
+
+  artifact_represents_result:
+    from: Artifact
+    to: Result
+    cardinality: many_to_one
+    inverse: result_has_artifact
+
+  source_span_from_artifact:
+    from: SourceSpan
+    to: Artifact
+    cardinality: many_to_one
+    inverse: artifact_has_source_span
+
+  search_run_has_result:
+    from: SearchRun
+    to: SearchResult
+    cardinality: one_to_many
+    inverse: search_result_from_run
+
+  search_result_points_to_external_work:
+    from: SearchResult
+    to: ExternalWork
+    cardinality: many_to_one
+    inverse: external_work_returned_by_search_result
+
+  citation_represents_external_work:
+    from: Citation
+    to: ExternalWork
+    cardinality: many_to_one
+    inverse: external_work_has_citation
+
+  artifact_documents_external_work:
+    from: Artifact
+    to: ExternalWork
+    cardinality: many_to_one
+    inverse: external_work_has_metadata_artifact
+
+  claim_anchored_to_source_span:
+    from: Claim
+    to: SourceSpan
+    cardinality: many_to_many
+    inverse: source_span_anchors_claim
+
+  evidence_anchored_to_source_span:
+    from: Evidence
+    to: SourceSpan
+    cardinality: many_to_many
+    inverse: source_span_anchors_evidence
+
+  citation_anchored_to_source_span:
+    from: Citation
+    to: SourceSpan
+    cardinality: many_to_many
+    inverse: source_span_anchors_citation
+
+  result_anchored_to_source_span:
+    from: Result
+    to: SourceSpan
+    cardinality: many_to_many
+    inverse: source_span_anchors_result
+
+  extraction_uses_source_artifact:
+    from: Extraction
+    to: Artifact
+    cardinality: many_to_one
+    inverse: artifact_source_for_extraction
+
+  extraction_produces_artifact:
+    from: Extraction
+    to: Artifact
+    cardinality: one_to_many
+    inverse: artifact_produced_by_extraction

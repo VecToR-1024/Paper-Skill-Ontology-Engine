@@ -1,0 +1,68 @@
+schema_version: "0.1.0"
+
+event_envelope:
+  description: "Canonical envelope for append-only event log entries."
+  required:
+    - offset
+    - event_id
+    - timestamp
+    - actor
+    - function
+    - action_type
+    - object_type
+    - object_id
+    - payload
+  fields:
+    offset:
+      type: integer
+      description: "Monotonic event offset within one project event log."
+    event_id:
+      type: id
+      description: "Stable event id, e.g. EVT-000001."
+    timestamp:
+      type: datetime
+      description: "Event creation timestamp."
+    actor:
+      type: enum
+      enum: ActorType
+      description: "Who or what initiated the event."
+    function:
+      type: string
+      description: "Deterministic function or workflow that emitted the event."
+    action_type:
+      type: string
+      description: "Action type declared in kinetic/actions.yml."
+    object_type:
+      type: string
+      description: "Target object type from ontology/objects.yml."
+    object_id:
+      type: id
+      description: "Target object id."
+    link_type:
+      type: string
+      required: false
+      description: "Required for link.* actions."
+    payload:
+      type: json
+      description: "Action-specific payload."
+    references:
+      type: json
+      required: false
+      description: "Optional object/link references used as evidence or context."
+    rationale:
+      type: json
+      required: false
+      description: "Optional proposal-level burden-of-proof record used to justify high-impact actions."
+    approval:
+      type: json
+      required: false
+      description: "Human approval metadata when required."
+
+offset_policy:
+  scope: project_event_log
+  starts_at: 1
+  monotonic: true
+  gaps_allowed: false
+
+event_id_policy:
+  format: "EVT-{offset:06d}"

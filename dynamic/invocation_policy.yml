@@ -1,0 +1,58 @@
+schema_version: "0.1.0"
+
+modes:
+  isolated_worker:
+    description: "Prepare a frozen packet for one expert worker; worker outputs proposals only."
+    isolated_context: true
+    can_write_event_log: false
+    default_for_formal_execution: true
+
+  multi_agent_review:
+    description: "Prepare multiple isolated reviewer packets and aggregate their outputs."
+    isolated_context: true
+    can_write_event_log: false
+    default_for_formal_execution: false
+
+defaults:
+  single_expert_execution: isolated_worker
+  review_or_cold_read: multi_agent_review
+
+expert_defaults:
+  positioning_expert: isolated_worker
+  writing_expert: isolated_worker
+  style_expert: isolated_worker
+  venue_expert: isolated_worker
+  review_expert: multi_agent_review
+  rebuttal_expert: isolated_worker
+  assembly_expert: isolated_worker
+
+packet_contract:
+  worker_must_read:
+    - input_snapshot/paper.yml
+    - expert_brief.md
+    - expert_output_contract.md
+    - task.md
+    - runner_manifest.yml
+  worker_must_not_modify:
+    - state/paper.yml
+    - events/event_log.yml
+  worker_must_not_create_by_default:
+    - project-level HTML overview pages
+    - project-level HTML draft pages
+    - untracked files outside the invocation outputs directory
+  expected_outputs:
+    - outputs/report.md
+    - outputs/proposals.yml
+  commit_rule: "Only the main agent/runtime may validate proposals and append events; persistent files must be represented by artifact.created proposals."
+  execution_record_rule: "Packet preparation records requested intent only. Before handoff, the runtime must record the actual execution backend and whether isolation was verified."
+
+execution_backends:
+  isolated_worker:
+    isolation_verified: true
+    reason_required: false
+  current_agent_fallback:
+    isolation_verified: false
+    reason_required: true
+  manual_packet:
+    isolation_verified: false
+    reason_required: true

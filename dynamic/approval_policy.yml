@@ -1,0 +1,55 @@
+schema_version: "0.1.0"
+
+approval_policy:
+  default: not_required
+
+  action_overrides:
+    paper.target_venue_set:
+      required: true
+      reason: "Changing target venue affects writing strategy and submission plan."
+    claim.updated:
+      required: true
+      reason: "Changing a claim can alter scientific responsibility."
+    issue.status_changed:
+      required: true
+      reason: "Resolving or ignoring issues should be author-controlled."
+    issue.severity_changed:
+      required: true
+      reason: "Reclassifying issue severity changes the active risk surface and should be author-controlled."
+    decision.recorded:
+      required: true
+      reason: "Final decisions must be attributable."
+    link.removed:
+      required: true
+      reason: "Removing semantic links can hide evidence or issue traceability."
+    checkpoint.created:
+      required: true
+      reason: "Compacting an event log changes the active audit surface and must be explicitly approved."
+    submission.finalized:
+      required: true
+      reason: "Final submission readiness is an author decision."
+
+  decision_type_overrides:
+    argue_with_evidence:
+      required: true
+    clarify_response:
+      required: true
+    change_claim:
+      required: true
+    change_venue:
+      required: true
+    reject_fix:
+      required: true
+    mark_wont_fix:
+      required: true
+    approve_submission:
+      required: true
+
+  issue_gates:
+    P0:
+      blocks:
+        - submission.finalized
+      until_status:
+        - resolved
+        - wont_fix
+      human_required: true

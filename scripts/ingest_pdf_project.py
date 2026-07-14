@@ -1,0 +1,391 @@
+from __future__ import annotations
+
+import argparse
+import os
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+from typing import Any
+
+from event_log import (
+    append_event,
+    load_registry,
+    make_event,
+    project_state,
+    read_events,
+    validate_event_log,
+    write_yaml,
+)
+from path_utils import portable_path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def normalize_path(path_value: str) -> Path:
+    path = Path(path_value)
+    if path.is_absolute():
+        return path.resolve()
+    return (Path.cwd() / path).resolve()
+
+
+def project_local_path(project_dir: Path, path: Path) -> str:
+    return portable_path(path, project_dir, ROOT)
+
+
+def safe_slug(value: str) -> str:
+    chars = []
+    for char in value.lower():
+        if char.isalnum():
+            chars.append(char)
+        elif char in {" ", "-", "_", "."}:
+            chars.append("-")
+    slug = "".join(chars).strip("-")
+    while "--" in slug:
+        slug = slug.replace("--", "-")
+    return slug or "paper"
+
+
+def import_extractor() -> tuple[str, Any] | tuple[None, None]:
+    for module_name in ("pypdf", "PyPDF2", "pdfplumber", "fitz"):
+        try:
+            module = __import__(module_name)
+            return module_name, module
+        except ModuleNotFoundError:
+            continue
+    return None, None
+
+
+def extract_with_python_module(pdf_path: Path) -> tuple[str, str, int | None, list[str]]:
+    module_name, module = import_extractor()
+    if module_name is None:
+        return "", "unavailable", None, ["No Python PDF text extractor is installed: tried pypdf, PyPDF2, pdfplumber, fitz."]
+
+    warnings: list[str] = []
+    pages: list[str] = []
+    page_count: int | None = None
+    if module_name in {"pypdf", "PyPDF2"}:
+        reader = module.PdfReader(str(pdf_path))
+        page_count = len(reader.pages)
+        for index, page in enumerate(reader.pages, start=1):
+            try:
+                pages.append(page.extract_text() or "")
+            except Exception as exc:  # noqa: BLE001 - report extractor-specific failures.
+                warnings.append(f"Page {index}: text extraction failed with {type(exc).__name__}: {exc}")
+                pages.append("")
+        return "\n\n".join(pages), module_name, page_count, warnings
+
+    if module_name == "pdfplumber":
+        with module.open(str(pdf_path)) as pdf:
+            page_count = len(pdf.pages)
+            for index, page in enumerate(pdf.pages, start=1):
+                try:
+                    pages.append(page.extract_text() or "")
+                except Exception as exc:  # noqa: BLE001
+                    warnings.append(f"Page {index}: text extraction failed with {type(exc).__name__}: {exc}")
+                    pages.append("")
+        return "\n\n".join(pages), module_name, page_count, warnings
+
+    if module_name == "fitz":
+        document = module.open(str(pdf_path))
+        page_count = document.page_count
+        for index in range(page_count):
+            try:
+                pages.append(document.load_page(index).get_text("text") or "")
+            except Exception as exc:  # noqa: BLE001
+                warnings.append(f"Page {index + 1}: text extraction failed with {type(exc).__name__}: {exc}")
+                pages.append("")
+        document.close()
+        return "\n\n".join(pages), "pymupdf", page_count, warnings
+
+    return "", "unavailable", None, [f"Unsupported extractor module: {module_name}"]
+
+
+def extract_with_pdftotext(pdf_path: Path) -> tuple[str, str, int | None, list[str]]:
+    exe = shutil.which("pdftotext")
+    if exe is None:
+        return "", "unavailable", None, ["pdftotext executable is not available on PATH."]
+    result = subprocess.run(
+        [exe, "-layout", str(pdf_path), "-"],
+        cwd=str(ROOT),
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    warnings = []
+    if result.stderr.strip():
+        warnings.append(result.stderr.strip())
+    if result.returncode != 0:
+        warnings.append(f"pdftotext exited with code {result.returncode}.")
+    return result.stdout, "pdftotext", None, warnings
+
+
+def extract_pdf_text(pdf_path: Path) -> tuple[str, str, int | None, list[str]]:
+    text, method, page_count, warnings = extract_with_python_module(pdf_path)
+    if text.strip() or method != "unavailable":
+        return text, method, page_count, warnings
+    pdftotext_text, pdftotext_method, pdftotext_pages, pdftotext_warnings = extract_with_pdftotext(pdf_path)
+    return pdftotext_text, pdftotext_method, pdftotext_pages, warnings + pdftotext_warnings
+
+
+def write_text_artifact(path: Path, title: str, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    content = [
+        f"# Extracted Text: {title}",
+        "",
+        "> Generated by scripts/ingest_pdf_project.py. Verify extraction quality before expert review.",
+        "",
+        text.strip(),
+        "",
+    ]
+    path.write_text("\n".join(content), encoding="utf-8")
+
+
+def build_report(
+    *,
+    paper_id: str,
+    project_dir: Path,
+    source_pdf: Path,
+    source_artifact_id: str,
+    extraction_id: str,
+    method: str,
+    status: str,
+    output_artifact_ids: list[str],
+    page_count: int | None,
+    character_count: int,
+    warnings: list[str],
+) -> dict[str, Any]:
+    return {
+        "paper_id": paper_id,
+        "source_pdf": project_local_path(project_dir, source_pdf),
+        "source_artifact_id": source_artifact_id,
+        "extraction_id": extraction_id,
+        "method": method,
+        "status": status,
+        "output_artifact_ids": output_artifact_ids,
+        "page_count": page_count,
+        "character_count": character_count,
+        "warnings": warnings,
+        "notes": [
+            "Experts should read normalized artifacts, not parse raw PDF directly.",
+            "If status is failed or partial, inspect this report before downstream review.",
+        ],
+    }
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Create a paper project from a source PDF through document intake.")
+    parser.add_argument("pdf_path")
+    parser.add_argument("--out-dir", required=True)
+    parser.add_argument("--paper-id", required=True)
+    parser.add_argument("--title", required=True)
+    parser.add_argument("--field", default="")
+    args = parser.parse_args()
+
+    source_pdf = normalize_path(args.pdf_path)
+    if not source_pdf.exists():
+        raise FileNotFoundError(source_pdf)
+    project_dir = normalize_path(args.out_dir)
+    log_path = project_dir / "events" / "event_log.yml"
+    state_path = project_dir / "state" / "paper.yml"
+    artifacts_dir = project_dir / "artifacts"
+
+    if log_path.exists():
+        raise FileExistsError(f"Refusing to overwrite existing event log: {log_path}")
+
+    artifacts_dir.mkdir(parents=True, exist_ok=True)
+    (project_dir / "events").mkdir(parents=True, exist_ok=True)
+    (project_dir / "state").mkdir(parents=True, exist_ok=True)
+
+    registry = load_registry()
+    paper_slug = safe_slug(args.paper_id)
+    source_artifact_id = f"A-source-pdf-{paper_slug}"
+    extracted_artifact_id = f"A-extracted-text-{paper_slug}"
+    report_artifact_id = f"A-extraction-report-{paper_slug}"
+    extraction_id = f"X-pdf-{paper_slug}"
+
+    source_dest = artifacts_dir / "source.pdf"
+    shutil.copy2(source_pdf, source_dest)
+
+    extracted_text, method, page_count, warnings = extract_pdf_text(source_pdf)
+    character_count = len(extracted_text.strip())
+    output_artifact_ids = [report_artifact_id]
+    extracted_path = artifacts_dir / "extracted_text.md"
+    status = "succeeded"
+    confidence = 0.9
+    if character_count:
+        write_text_artifact(extracted_path, args.title, extracted_text)
+        output_artifact_ids.insert(0, extracted_artifact_id)
+        if warnings:
+            status = "partial"
+            confidence = 0.6
+    else:
+        status = "failed"
+        confidence = 0.0
+        warnings.append("No extracted text was produced. Install/configure a PDF text extractor or provide Markdown/TeX.")
+
+    report_path = artifacts_dir / "extraction_report.yml"
+    report = build_report(
+        paper_id=args.paper_id,
+        project_dir=project_dir,
+        source_pdf=source_dest,
+        source_artifact_id=source_artifact_id,
+        extraction_id=extraction_id,
+        method=method,
+        status=status,
+        output_artifact_ids=output_artifact_ids,
+        page_count=page_count,
+        character_count=character_count,
+        warnings=warnings,
+    )
+    write_yaml(report_path, report)
+
+    events = [
+        make_event(
+            offset=1,
+            actor="user",
+            function="create_object",
+            action_type="paper.created",
+            object_type="Paper",
+            object_id=args.paper_id,
+            payload={
+                "paper_id": args.paper_id,
+                "title": args.title,
+                "field": args.field,
+                "stage": "drafting",
+            },
+        ),
+        make_event(
+            offset=2,
+            actor="workflow",
+            function="create_object",
+            action_type="artifact.created",
+            object_type="Artifact",
+            object_id=source_artifact_id,
+            payload={
+                "artifact_id": source_artifact_id,
+                "paper_id": args.paper_id,
+                "artifact_type": "source_pdf",
+                "path": project_local_path(project_dir, source_dest),
+                "description": "Original source PDF copied into the controlled document-intake project.",
+                "produced_by": "ingest_pdf_project.py",
+            },
+        ),
+    ]
+
+    next_offset = 3
+    if character_count:
+        events.append(
+            make_event(
+                offset=next_offset,
+                actor="workflow",
+                function="create_object",
+                action_type="artifact.created",
+                object_type="Artifact",
+                object_id=extracted_artifact_id,
+                payload={
+                    "artifact_id": extracted_artifact_id,
+                    "paper_id": args.paper_id,
+                    "artifact_type": "extracted_text_md",
+                    "path": project_local_path(project_dir, extracted_path),
+                    "description": "Markdown text extracted from the source PDF for downstream expert review.",
+                    "produced_by": "ingest_pdf_project.py",
+                },
+            )
+        )
+        next_offset += 1
+
+    events.extend(
+        [
+            make_event(
+                offset=next_offset,
+                actor="workflow",
+                function="create_object",
+                action_type="artifact.created",
+                object_type="Artifact",
+                object_id=report_artifact_id,
+                payload={
+                    "artifact_id": report_artifact_id,
+                    "paper_id": args.paper_id,
+                    "artifact_type": "extraction_report",
+                    "path": project_local_path(project_dir, report_path),
+                    "description": f"Document-intake extraction report. Status: {status}. Method: {method}.",
+                    "produced_by": "ingest_pdf_project.py",
+                },
+            ),
+            make_event(
+                offset=next_offset + 1,
+                actor="workflow",
+                function="create_object",
+                action_type="extraction.created",
+                object_type="Extraction",
+                object_id=extraction_id,
+                payload={
+                    "extraction_id": extraction_id,
+                    "paper_id": args.paper_id,
+                    "source_artifact_id": source_artifact_id,
+                    "method": method,
+                    "extraction_status": status,
+                    "output_artifact_ids": output_artifact_ids,
+                    "page_count": page_count,
+                    "character_count": character_count,
+                    "confidence": confidence,
+                    "warnings": warnings,
+                },
+            ),
+        ]
+    )
+    next_offset += 2
+
+    if status != "succeeded":
+        events.append(
+            make_event(
+                offset=next_offset,
+                actor="workflow",
+                function="create_object",
+                action_type="issue.created",
+                object_type="Issue",
+                object_id=f"I-extraction-{paper_slug}",
+                payload={
+                    "issue_id": f"I-extraction-{paper_slug}",
+                    "paper_id": args.paper_id,
+                    "category": "extraction_risk",
+                    "severity": "P1",
+                    "issue_status": "open",
+                    "evidence": "PDF intake did not produce clean extracted text.",
+                    "suggested_action": "Install a PDF text extractor, provide Markdown/TeX, or manually verify the extracted artifact before expert review.",
+                },
+            )
+        )
+
+    for event in events:
+        append_event(log_path, event, registry)
+
+    all_events = read_events(log_path)
+    errors = validate_event_log(all_events, registry)
+    if errors:
+        for error in errors:
+            print(error)
+        return 1
+    write_yaml(state_path, project_state(all_events, log_path.parent))
+
+    print(f"project: {project_dir}")
+    print(f"source artifact: {source_dest}")
+    if character_count:
+        print(f"extracted text: {extracted_path}")
+    print(f"extraction report: {report_path}")
+    print(f"events appended: {len(events)}")
+    print(f"state: {state_path}")
+    if warnings:
+        print("warnings:")
+        for warning in warnings:
+            print(f"- {warning}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

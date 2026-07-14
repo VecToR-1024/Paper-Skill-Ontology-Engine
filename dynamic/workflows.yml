@@ -1,0 +1,244 @@
+schema_version: "0.1.0"
+
+workflows:
+  paper_intake:
+    description: "Create or initialize a paper project."
+    experts:
+      - writing_expert
+      - positioning_expert
+    functions:
+      - validate_event
+      - append_event
+      - apply_event_to_state
+    may_emit_actions:
+      - paper.created
+      - section.upserted
+      - claim.created
+      - reasoning_step.created
+      - method.created
+      - dataset.created
+      - experiment.created
+      - metric.created
+      - result.created
+
+  document_intake:
+    description: "Normalize a raw PDF/DOCX/image document into auditable artifacts before experts read it."
+    experts: []
+    functions:
+      - ingest_pdf_project
+      - extract_pdf_text
+      - create_extraction_report
+      - extract_source_spans
+      - validate_event
+      - append_event
+      - apply_event_to_state
+    may_emit_actions:
+      - paper.created
+      - artifact.created
+      - extraction.created
+      - source_span.created
+      - issue.created
+      - link.created
+
+  literature_intake:
+    description: "Normalize structured search output into auditable candidate works before experts select citations."
+    experts: []
+    functions:
+      - fetch_search_results
+      - import_search_results
+      - import_work_metadata
+      - validate_event
+      - append_event
+      - apply_event_to_state
+    may_emit_actions:
+      - search_run.created
+      - external_work.upserted
+      - search_result.created
+      - link.created
+      - artifact.created
+
+  literature_selection:
+    description: "Select imported ExternalWork candidates as paper citations and link them to claims or evidence needs."
+    experts:
+      - positioning_expert
+    functions:
+      - prepare_expert_invocation
+      - run_isolated_expert
+      - validate_literature_coverage
+      - validate_event
+      - append_event
+      - apply_event_to_state
+    may_emit_actions:
+      - citation.created
+      - issue.created
+      - link.created
+      - artifact.created
+
+  positioning:
+    description: "Clarify gap, contribution, and competition."
+    experts:
+      - positioning_expert
+      - venue_expert
+    functions:
+      - prepare_expert_invocation
+      - run_isolated_expert
+      - validate_event
+      - append_event
+      - apply_event_to_state
+    may_emit_actions:
+      - claim.created
+      - evidence.created
+      - reasoning_step.created
+      - method.created
+      - dataset.created
+      - experiment.created
+      - metric.created
+      - result.created
+      - citation.created
+      - issue.created
+      - issue.severity_changed
+      - decision.proposed
+      - artifact.created
+
+  argument_extraction:
+    description: "Extract claim, evidence, reasoning-step, result, and support-link proposals from sections or artifacts."
+    experts:
+      - positioning_expert
+    functions:
+      - prepare_expert_invocation
+      - run_isolated_expert
+      - validate_event
+      - append_event
+      - apply_event_to_state
+    may_emit_actions:
+      - claim.created
+      - evidence.created
+      - reasoning_step.created
+      - method.created
+      - dataset.created
+      - experiment.created
+      - metric.created
+      - result.created
+      - citation.created
+      - issue.created
+      - link.created
+      - artifact.created
+
+  writing_revision:
+    description: "Draft or revise sections using issues, claims, and the extracted argument graph as context."
+    experts:
+      - writing_expert
+      - style_expert
+    functions:
+      - prepare_expert_invocation
+      - run_isolated_expert
+      - validate_event
+      - append_event
+      - apply_event_to_state
+    may_emit_actions:
+      - section.upserted
+      - claim.created
+      - claim.updated
+      - reasoning_step.created
+      - method.created
+      - dataset.created
+      - experiment.created
+      - metric.created
+      - result.created
+      - issue.created
+      - issue.status_changed
+      - issue.severity_changed
+      - artifact.created
+
+  style_check:
+    description: "Run mechanical and semantic writing checks over sections and the extracted argument graph."
+    experts:
+      - style_expert
+    functions:
+      - prepare_expert_invocation
+      - run_isolated_expert
+      - validate_event
+      - append_event
+      - apply_event_to_state
+    may_emit_actions:
+      - review.created
+      - issue.created
+      - issue.severity_changed
+      - artifact.created
+
+  venue_fit:
+    description: "Load or create venue profile and compare paper with venue expectations."
+    experts:
+      - venue_expert
+      - style_expert
+    functions:
+      - prepare_expert_invocation
+      - run_isolated_expert
+      - validate_event
+      - append_event
+      - apply_event_to_state
+    may_emit_actions:
+      - venue.created
+      - paper.target_venue_set
+      - issue.created
+      - issue.severity_changed
+      - decision.proposed
+      - artifact.created
+
+  mock_review:
+    description: "Run cold-read review over manuscript artifacts and the extracted argument graph; multi-agent is preferred for independent reviewer perspectives."
+    experts:
+      - review_expert
+    multi_agent_preferred: true
+    functions:
+      - prepare_review_run
+      - run_multi_agent_review
+      - aggregate_review_reports
+      - validate_event
+      - append_event
+      - apply_event_to_state
+    may_emit_actions:
+      - review.created
+      - issue.created
+      - issue.severity_changed
+      - decision.proposed
+      - artifact.created
+
+  rebuttal:
+    description: "Classify reviewer comments, map evidence, and prepare response strategy."
+    experts:
+      - rebuttal_expert
+      - writing_expert
+    functions:
+      - prepare_expert_invocation
+      - run_isolated_expert
+      - validate_event
+      - append_event
+      - apply_event_to_state
+    may_emit_actions:
+      - review.created
+      - decision.proposed
+      - decision.recorded
+      - issue.created
+      - issue.status_changed
+      - issue.severity_changed
+      - artifact.created
+
+  manuscript_assembly:
+    description: "Assemble final manuscript artifacts and run final gates."
+    experts:
+      - assembly_expert
+      - venue_expert
+    functions:
+      - prepare_expert_invocation
+      - run_isolated_expert
+      - validate_event
+      - append_event
+      - apply_event_to_state
+      - finalize_submission
+    may_emit_actions:
+      - artifact.created
+      - issue.created
+      - issue.severity_changed
+      - decision.proposed
+      - submission.finalized

@@ -1,0 +1,35 @@
+schema_version: "0.1.0"
+package_name: research-paper-suite
+package_version: "0.2.2"
+install_mode: clean_or_replace
+required_files:
+  - SKILL.md
+  - AGENTS.md
+  - skill_manifest.yml
+  - ontology/objects.yml
+  - ontology/properties.yml
+  - ontology/links.yml
+  - kinetic/actions.yml
+  - kinetic/functions.yml
+  - dynamic/action_policy.yml
+  - dynamic/workflows.yml
+  - dynamic/templates/literature_selection.md
+  - scripts/apply_action_proposals.py
+  - scripts/check_repository_hygiene.py
+  - scripts/event_log.py
+  - scripts/import_work_metadata.py
+  - scripts/install_skill.py
+  - scripts/record_expert_execution.py
+  - scripts/export_project_visualization.py
+  - scripts/validate_layers.py
+  - scripts/validate_project_acceptance.py
+  - scripts/validate_literature_coverage.py
+  - tests/test_expert_execution_record.py
+  - tests/test_ingest_paper_default_output.py
+  - tests/test_repository_hygiene.py
+  - tests/test_literature_evidence_policy.py
+  - tests/test_literature_coverage.py
+  - tests/test_pdf_project_paths.py
+  - tests/test_skill_install.py
+  - tests/test_work_metadata_enrichment.py
+  - tests/test_visualization_research_integrity.py

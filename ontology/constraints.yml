@@ -1,0 +1,93 @@
+schema_version: "0.1.0"
+
+constraints:
+  - id: one_active_target_venue_per_paper
+    type: unique_active_link
+    link_type: paper_targets_venue
+    scope_object: Paper
+    severity: error
+
+  - id: issue_must_identify_target_or_context
+    type: required_reference
+    object_type: Issue
+    any_of_properties:
+      - target_object_id
+      - review_id
+      - section_id
+      - claim_id
+    severity: error
+
+  - id: issue_target_type_requires_target_id
+    type: field_dependency
+    object_type: Issue
+    when:
+      target_object_type:
+        - Paper
+        - Section
+        - Claim
+        - Evidence
+        - ReasoningStep
+        - Method
+        - Dataset
+        - Experiment
+        - Metric
+        - Result
+        - Citation
+        - Venue
+        - SearchRun
+        - ExternalWork
+        - SearchResult
+        - SourceSpan
+        - Extraction
+        - Artifact
+    require:
+      target_object_id: present
+    severity: error
+
+  - id: p0_issue_requires_decision_before_submission
+    type: approval_gate
+    condition:
+      object_type: Issue
+      severity: P0
+      issue_status:
+        - open
+        - proposed
+        - accepted
+    blocks_action_types:
+      - submission.finalized
+    severity: error
+
+  - id: decision_with_human_required_needs_user_status
+    type: field_dependency
+    object_type: Decision
+    when:
+      human_required: true
+    require:
+      decision_status:
+        - user_approved
+        - user_rejected
+        - proposed
+    severity: error
+
+  - id: artifact_path_required
+    type: required_property
+    object_type: Artifact
+    property: path
+    severity: error
+
+  - id: result_should_reference_experiment_metric_or_method
+    type: required_reference
+    object_type: Result
+    any_of_properties:
+      - experiment_id
+      - metric_id
+      - method_id
+    severity: warning
+
+  - id: experiment_should_reference_section_or_protocol
+    type: required_reference
+    object_type: Experiment
+    any_of_properties:
+      - section_id
+      - protocol_summary
+    severity: warning

@@ -1,0 +1,377 @@
+schema_version: "0.1.0"
+
+base_types:
+  id:
+    description: "Stable object identifier."
+    scalar: string
+  string:
+    description: "Short text value."
+    scalar: string
+  text:
+    description: "Long-form text value."
+    scalar: string
+  datetime:
+    description: "ISO 8601 timestamp with timezone when available."
+    scalar: string
+  enum:
+    description: "Value must be one of a named enum."
+    scalar: string
+  ref:
+    description: "Reference to another object id."
+    scalar: string
+  path:
+    description: "Workspace-relative or absolute artifact path."
+    scalar: string
+  uri:
+    description: "External URL or stable URI."
+    scalar: string
+  integer:
+    description: "Integer number."
+    scalar: integer
+  number:
+    description: "Numeric value."
+    scalar: number
+  boolean:
+    description: "Boolean value."
+    scalar: boolean
+  json:
+    description: "Structured payload that is validated by a specific workflow."
+    scalar: object
+
+common_properties:
+  base_object:
+    id:
+      type: id
+      required: true
+    created_at:
+      type: datetime
+      required: true
+    updated_at:
+      type: datetime
+      required: false
+    created_by:
+      type: enum
+      enum: ActorType
+      required: true
+    status:
+      type: enum
+      enum: ObjectStatus
+      required: true
+
+enums:
+  ActorType:
+    values:
+      - user
+      - system
+      - router
+      - workflow
+      - positioning_expert
+      - writing_expert
+      - style_expert
+      - review_expert
+      - venue_expert
+      - rebuttal_expert
+      - assembly_expert
+
+  ObjectStatus:
+    values:
+      - active
+      - archived
+      - superseded
+      - deleted
+
+  PaperStage:
+    values:
+      - idea
+      - positioning
+      - drafting
+      - checking
+      - reviewing
+      - rebuttal
+      - assembly
+      - submission
+
+  SectionType:
+    values:
+      - title
+      - abstract
+      - introduction
+      - background
+      - related_work
+      - method
+      - experiments
+      - results
+      - analysis
+      - discussion
+      - future_work
+      - conclusion
+      - limitations
+      - ethics
+      - appendix
+      - references
+
+  ClaimStrength:
+    values:
+      - weak
+      - moderate
+      - strong
+      - causal
+
+  EvidenceType:
+    values:
+      - citation
+      - experiment_result
+      - ablation
+      - theorem
+      - proof
+      - dataset
+      - qualitative_example
+      - user_provided_note
+      - extracted_text
+
+  ReasoningStepType:
+    values:
+      - proof_step
+      - theoretical_argument
+      - conceptual_link
+      - causal_argument
+      - interpretation
+      - limitation_argument
+
+  MethodType:
+    values:
+      - preprocessing
+      - model
+      - baseline
+      - training_procedure
+      - evaluation_protocol
+      - analysis_method
+      - system_component
+
+  DatasetRole:
+    values:
+      - training
+      - validation
+      - test
+      - benchmark
+      - source_data
+      - external_reference
+
+  ExperimentType:
+    values:
+      - main_result
+      - ablation
+      - baseline_comparison
+      - robustness
+      - efficiency
+      - qualitative
+      - error_analysis
+
+  MetricDirection:
+    values:
+      - higher_is_better
+      - lower_is_better
+      - target_range
+      - descriptive
+
+  ResultKind:
+    values:
+      - absolute
+      - comparison
+      - qualitative
+      - negative
+      - inconclusive
+
+  CitationRole:
+    values:
+      - support
+      - contrast
+      - background
+      - limitation
+      - method_source
+      - dataset_source
+
+  CitationVerificationStatus:
+    values:
+      - tentative
+      - verified
+
+  ExternalWorkMetadataQuality:
+    values:
+      - title_only
+      - bibliographic
+      - abstract
+      - full_text
+
+  LiteraturePositioningRole:
+    values:
+      - predecessor
+      - direct_competitor
+      - later_extension
+      - limitation
+      - background
+      - unknown
+
+  IssueSeverity:
+    values:
+      - P0
+      - P1
+      - P2
+
+  IssueStatus:
+    values:
+      - open
+      - proposed
+      - accepted
+      - rejected
+      - resolved
+      - wont_fix
+
+  IssueTargetType:
+    values:
+      - Paper
+      - Section
+      - Claim
+      - Evidence
+      - ReasoningStep
+      - Method
+      - Dataset
+      - Experiment
+      - Metric
+      - Result
+      - Citation
+      - Venue
+      - SearchRun
+      - ExternalWork
+      - SearchResult
+      - SourceSpan
+      - Extraction
+      - Artifact
+
+  IssueCategory:
+    values:
+      - overclaim
+      - missing_evidence
+      - unclear_contribution
+      - weak_positioning
+      - citation_gap
+      - style_violation
+      - venue_mismatch
+      - method_risk
+      - experiment_risk
+      - rebuttal_risk
+      - format_risk
+      - extraction_risk
+
+  ReviewType:
+    values:
+      - style_check
+      - claim_evidence_audit
+      - mock_peer_review
+      - venue_fit_review
+      - rebuttal_review
+      - pre_submission_review
+      - extraction_check
+
+  DecisionType:
+    values:
+      - accept_fix
+      - reject_fix
+      - defer
+      - mark_wont_fix
+      - change_claim
+      - change_venue
+      - clarify_response
+      - argue_with_evidence
+      - approve_submission
+
+  DecisionStatus:
+    values:
+      - proposed
+      - user_approved
+      - user_rejected
+      - applied
+
+  VenueType:
+    values:
+      - conference
+      - journal
+      - workshop
+      - preprint
+      - unknown
+
+  ArtifactType:
+    values:
+      - source_pdf
+      - source_docx
+      - extracted_text_md
+      - extraction_report
+      - table_csv
+      - extracted_figures_manifest
+      - draft_md
+      - section_md
+      - section_tex
+      - positioning_card
+      - venue_card
+      - style_report
+      - quick_scan_report
+      - search_results
+      - external_work_metadata
+      - review_report
+      - assembly_report
+      - reviewer_comments
+      - rebuttal_plan
+      - rebuttal_letter
+      - manuscript_md
+      - manuscript_tex
+      - preview_html
+      - bibliography_bib
+      - included_tex
+      - figure_image
+      - table_tex
+      - table_md
+      - manuscript_pdf
+      - event_log
+      - state_snapshot
+
+  SourceLocatorType:
+    values:
+      - page
+      - paragraph
+      - line_range
+      - char_range
+      - tex_block
+      - markdown_block
+      - unknown
+
+  SearchProvider:
+    values:
+      - semantic_scholar
+      - crossref
+      - arxiv
+      - openalex
+      - manual
+      - web
+      - other
+
+  SearchRunStatus:
+    values:
+      - succeeded
+      - partial
+      - failed
+
+  ExtractionMethod:
+    values:
+      - pypdf
+      - PyPDF2
+      - pdfplumber
+      - pymupdf
+      - pdftotext
+      - manual
+      - unavailable
+
+  ExtractionStatus:
+    values:
+      - succeeded
+      - partial
+      - failed

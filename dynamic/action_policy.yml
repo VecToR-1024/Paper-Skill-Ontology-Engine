@@ -1,0 +1,184 @@
+schema_version: "0.1.0"
+
+description: >
+  Proposal-level burden-of-proof policy. Event validation checks whether an
+  action is structurally legal; this policy checks whether a proposal has
+  enough rationale to be eligible for commit.
+
+defaults:
+  severity: low
+  requires_rationale: false
+  required_rationale: []
+  required_references_any: []
+  requires_human_gate: false
+
+rationale_fields:
+  problem_addressed:
+    description: "Issue, decision, or stated problem this action is meant to address."
+  why_this_action:
+    description: "Why this action is the appropriate next state change."
+  expected_state_delta:
+    description: "The intended change to objects, links, issues, artifacts, or workflow state."
+  alternatives_considered:
+    description: "Lower-impact or competing actions considered and why they were rejected."
+  risks:
+    description: "Known failure modes, residual risks, or remaining issues."
+  confidence:
+    description: "low, medium, or high confidence in the proposed action."
+  unanchored_reason:
+    description: "Why this semantic object is allowed to be created without a source_span anchor."
+
+action_policies:
+  claim.created:
+    severity: medium
+    requires_anchor_or_unanchored_reason: true
+    anchor_reference_keys:
+      - source_span_ids
+
+  evidence.created:
+    severity: medium
+    requires_anchor_or_unanchored_reason: true
+    anchor_reference_keys:
+      - source_span_ids
+
+  result.created:
+    severity: medium
+    requires_anchor_or_unanchored_reason: true
+    anchor_reference_keys:
+      - source_span_ids
+
+  citation.created:
+    severity: medium
+    requires_anchor_or_unanchored_reason: true
+    anchor_reference_keys:
+      - source_span_ids
+      - external_work_ids
+    requires_verification_status: true
+    verified_external_work_metadata_quality:
+      - abstract
+      - full_text
+    tentative_forbids_link_types:
+      - claim_uses_citation
+      - evidence_uses_citation
+
+  issue.created:
+    severity: medium
+    citation_gap_required_fields:
+      - target_object_type
+      - target_object_id
+      - missing_literature_role
+
+  paper.target_venue_set:
+    severity: high
+    requires_rationale: true
+    required_rationale:
+      - problem_addressed
+      - why_this_action
+      - expected_state_delta
+      - alternatives_considered
+      - risks
+    required_references_any:
+      - issue_ids
+      - artifact_ids
+      - decision_ids
+    requires_human_gate: true
+
+  claim.updated:
+    severity: high
+    requires_rationale: true
+    required_rationale:
+      - problem_addressed
+      - why_this_action
+      - expected_state_delta
+      - alternatives_considered
+      - risks
+    required_references_any:
+      - issue_ids
+      - evidence_ids
+      - result_ids
+      - decision_ids
+      - event_ids
+    requires_human_gate: true
+
+  issue.status_changed:
+    severity: high
+    requires_rationale: true
+    required_rationale:
+      - problem_addressed
+      - why_this_action
+      - expected_state_delta
+    required_references_any:
+      - issue_ids
+      - event_ids
+      - artifact_ids
+      - decision_ids
+    requires_human_gate: true
+
+  issue.severity_changed:
+    severity: high
+    requires_rationale: true
+    required_rationale:
+      - problem_addressed
+      - why_this_action
+      - expected_state_delta
+      - risks
+    required_references_any:
+      - issue_ids
+      - event_ids
+      - artifact_ids
+      - decision_ids
+    requires_human_gate: true
+
+  decision.recorded:
+    severity: high
+    requires_rationale: true
+    required_rationale:
+      - problem_addressed
+      - why_this_action
+      - expected_state_delta
+    required_references_any:
+      - issue_ids
+      - decision_ids
+    requires_human_gate: true
+
+  link.removed:
+    severity: high
+    requires_rationale: true
+    required_rationale:
+      - problem_addressed
+      - why_this_action
+      - expected_state_delta
+      - risks
+    required_references_any:
+      - issue_ids
+      - decision_ids
+      - event_ids
+    requires_human_gate: true
+
+  checkpoint.created:
+    severity: high
+    requires_rationale: true
+    required_rationale:
+      - problem_addressed
+      - why_this_action
+      - expected_state_delta
+      - risks
+    required_references_any:
+      - decision_ids
+      - artifact_ids
+    requires_human_gate: true
+
+  submission.finalized:
+    severity: critical
+    requires_rationale: true
+    required_rationale:
+      - problem_addressed
+      - why_this_action
+      - expected_state_delta
+      - alternatives_considered
+      - risks
+    required_references_any:
+      - decision_ids
+      - artifact_ids
+      - issue_ids
+    requires_human_gate: true
