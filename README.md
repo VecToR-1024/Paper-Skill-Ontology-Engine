@@ -1,5 +1,7 @@
 # Research Paper Suite
 
+**中文** | [English](README_EN.md)
+
 Research Paper Suite 是一个面向科研论文全流程的可审计工作流原型。它不把论文写作压缩成一条超长 prompt，而是把论文中的对象、来源、修改和审批保存为可校验、可回放的结构化状态。
 
 - 当前版本：`0.2.2`
