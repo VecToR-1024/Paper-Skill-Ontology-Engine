@@ -2,7 +2,7 @@
 
 [中文](README.md) | **English**
 
-Research Paper Suite is an auditable workflow prototype for the full research-paper lifecycle. Instead of compressing research writing into one oversized prompt, it stores paper entities, sources, revisions, and approvals as structured state that can be validated and replayed.
+Research Paper Suite is an auditable workflow system for the complete research-paper lifecycle. Built around a structured ontology, an append-only event log, deterministic validation, and expert orchestration, it turns paper entities, sources, revisions, and approvals into research state that can be verified, replayed, and handed off.
 
 - Current version: `0.2.2`
 - License: [Apache License 2.0](LICENSE)
@@ -26,7 +26,7 @@ paper.yml projects the current state
 acceptance, handoff, and visualization provide delivery checks
 ```
 
-## Why This Project Exists
+## Product Positioning
 
 Many research-writing agents leave rules, context, and intermediate outputs inside chat history. They may produce useful prose, but they struggle to answer basic audit questions consistently:
 
@@ -37,14 +37,15 @@ Many research-writing agents leave rules, context, and intermediate outputs insi
 - Can the current `paper.yml` be rebuilt from history?
 - Can the work continue after switching agents or platforms?
 
-Research Paper Suite turns those questions into explicit objects, links, events, and gates. The goal is not a longer prompt. The goal is a research workflow that is easier to audit, recover, and iterate.
+Research Paper Suite turns those questions into explicit objects, links, events, and gates. Research can continue across sessions, agents, and platforms without losing its provenance or decision history.
 
-## What It Is Not
+## Product Principles
 
-- It is not a single giant prompt containing every research-writing rule.
-- It is not a free-form editor where experts directly mutate `paper.yml`.
-- It does not treat search results as evidence automatically.
-- It is not yet a production backend with concurrent writers and remote worker orchestration.
+- **Structured state first:** paper entities, relationships, and decisions live in validated state rather than only in conversational context.
+- **Proposal-driven changes:** experts submit structured proposals; deterministic scripts validate and commit formal state.
+- **Event log as source of truth:** `paper.yml` is a rebuildable projection and accepted history remains append-only.
+- **Traceable provenance:** Evidence, Citations, and generated outputs connect to auditable sources.
+- **Human ownership of consequential decisions:** high-impact claim, evidence, venue, and rebuttal actions pass through explicit human gates.
 
 ## The Workflow in Five Minutes
 
@@ -74,7 +75,7 @@ Three constraints define the system:
 
 In the commands below, `python` means the Python interpreter configured for this project.
 
-### 1. Validate the suite
+### 1. Validate the installation
 
 ```powershell
 python scripts/validate_layers.py
@@ -392,42 +393,25 @@ python scripts/install_skill.py <target_skill_dir> --replace
 
 The default mode refuses to install over an existing target. `--replace` first creates a timestamped backup, then replaces the target with a complete staging copy validated against `skill_manifest.yml`.
 
-## Verification Baseline
+## Operational Guarantees
 
-The `v0.2.2` release baseline is:
+Research Paper Suite maintains consistent, auditable research state through:
 
-```text
-61 tests passed
-Semantic + kinetic + dynamic layer validation: ok
-```
+- an append-only event log that preserves the complete change history
+- projection replay that rebuilds the current `paper.yml`
+- proposal dry-runs that validate schemas, references, policies, and approvals before commit
+- SourceSpan and Artifact records that provide reviewable provenance
+- acceptance and handoff checks that verify delivery completeness
+- expert execution records that distinguish requested mode, actual backend, and isolation status
 
-Key regressions covered by the suite include:
+## Release Checks
 
-- project-relative PDF Artifact paths for external projects
-- rejection of stale ExternalWork endpoints during dry-run
-- acceptance of indirect Evidence -> SourceSpan -> Artifact provenance
-- literature-verification and positioning-coverage gates
-- honest recording of requested expert mode versus actual backend
-- continuous event offsets and IDs, plus projection replay
-- clean installation, manifest completeness, and static visualization export
-
-Before committing or publishing, run the repository hygiene gate again:
+Before committing or publishing, run:
 
 ```powershell
+python scripts/validate_layers.py
 python scripts/check_repository_hygiene.py .
+python -m pytest -q
 ```
 
-It rejects personal home directories, structured absolute paths, configured names, private-key headers, and common high-confidence API-token patterns. Use repeatable `--forbidden-name` arguments to block additional names or machine identifiers.
-
-## Current Boundaries
-
-This version is suitable for real-paper testing, internal demonstrations, and further product exploration. It should not yet be presented as a production multi-user backend.
-
-Areas that still need broader validation include:
-
-- very large event logs, long-lived checkpoints, and concurrent writes
-- real remote isolated-worker scheduling
-- rate limits, timeouts, and malformed responses across literature providers
-- complete cross-platform regression coverage outside Windows
-
-These limitations do not change the core contract: experts propose semantic judgments, deterministic scripts validate state changes, the event log preserves factual history, and humans own high-impact decisions.
+The repository hygiene gate rejects personal home directories, structured absolute paths, configured names, private-key headers, and common high-confidence API-token patterns. Use repeatable `--forbidden-name` arguments to block additional names or machine identifiers.

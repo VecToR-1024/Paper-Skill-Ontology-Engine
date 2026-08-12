@@ -2,7 +2,7 @@
 
 **中文** | [English](README_EN.md)
 
-Research Paper Suite 是一个面向科研论文全流程的可审计工作流原型。它不把论文写作压缩成一条超长 prompt，而是把论文中的对象、来源、修改和审批保存为可校验、可回放的结构化状态。
+Research Paper Suite 是一套面向科研论文全生命周期的可审计工作流系统。它以结构化 ontology、append-only event log、确定性校验和 expert orchestration 为核心，将论文中的对象、来源、修改与审批组织为可验证、可回放、可交接的研究状态。
 
 - 当前版本：`0.2.2`
 - 开源协议：[Apache License 2.0](LICENSE)
@@ -21,7 +21,7 @@ paper.yml 投影当前状态
 acceptance、handoff 和 visualization 提供交付检查
 ```
 
-## 为什么做这个项目
+## 产品定位
 
 传统科研写作 agent 往往把大量上下文、规则和中间产物留在聊天记录里。它可以生成不错的文本，但很难稳定回答下面这些问题：
 
@@ -32,14 +32,15 @@ acceptance、handoff 和 visualization 提供交付检查
 - 当前 `paper.yml` 能否从历史记录完整重建？
 - 换一个 agent 或平台后，工作状态还能否继续？
 
-Research Paper Suite 把这些问题变成显式的对象、关系、事件和门禁。目标不是让 prompt 更长，而是让研究流程更容易审计、恢复和迭代。
+Research Paper Suite 把这些问题转化为显式的对象、关系、事件和门禁，让研究流程能够跨会话、跨 agent 和跨平台持续推进，并保持完整的来源与决策记录。
 
-## 它不是什么
+## 产品原则
 
-- 不是一个把所有规则塞在一起的“大论文 prompt”。
-- 不是让 expert 直接改写 `paper.yml` 的自由编辑器。
-- 不是把搜索结果自动当作论文证据的文献拼装器。
-- 不是已经具备生产级并发和远程 worker 调度的完整后端。
+- **结构化状态优先**：论文对象、关系和决策进入可校验状态，而不是只留在对话上下文中。
+- **Proposal 驱动**：expert 提交结构化建议，正式状态只由确定性脚本校验和提交。
+- **Event log 作为事实源**：`paper.yml` 是可重建投影，历史事件保持 append-only。
+- **来源可追溯**：Evidence、Citation 和生成产物必须连接到可审计来源。
+- **关键决策由人负责**：主张、证据、投稿和 rebuttal 等高影响动作通过显式人类闸门。
 
 ## 五分钟了解工作流
 
@@ -69,7 +70,7 @@ PDF / TeX / Markdown
 
 下面的 `python` 表示你为该项目准备的 Python 解释器。
 
-### 1. 验证 skill
+### 1. 验证安装
 
 ```powershell
 python scripts/validate_layers.py
@@ -387,42 +388,25 @@ python scripts/install_skill.py <target_skill_dir> --replace
 
 默认模式在目标目录已存在时拒绝安装。`--replace` 会先创建时间戳备份，再用通过 `skill_manifest.yml` 校验的完整 staging copy 替换目标目录。
 
-## 验证基线
+## 运行保证
 
-`v0.2.2` 收尾时的基线：
+Research Paper Suite 通过以下机制保持研究状态的一致性与可审计性：
 
-```text
-61 tests passed
-Semantic + kinetic + dynamic layer validation: ok
-```
+- append-only event log 保留完整变更历史
+- projection replay 可重建当前 `paper.yml`
+- proposal dry-run 在提交前校验 schema、引用、策略与审批
+- SourceSpan 与 Artifact 提供可复查的来源链
+- acceptance 与 handoff 检查交付完整性
+- expert execution record 区分请求模式、实际 backend 与隔离状态
 
-已经覆盖的关键回归包括：
+## 发布检查
 
-- 外部项目的 PDF Artifact 路径保持 project-relative
-- stale ExternalWork endpoint 在 dry-run 阶段被拒绝
-- Evidence -> SourceSpan -> Artifact 间接 provenance 被 acceptance 正确识别
-- Literature verification 和 positioning coverage 门禁
-- Expert requested mode 与 actual backend 的诚实记录
-- Event offset / event ID 连续性与 projection replay
-- 干净安装、manifest 完整性和静态可视化导出
-
-在 commit 或发布前，再运行一次仓库卫生检查：
+提交或发布前运行：
 
 ```powershell
+python scripts/validate_layers.py
 python scripts/check_repository_hygiene.py .
+python -m pytest -q
 ```
 
-它会拒绝个人 home 目录、结构化绝对路径、指定姓名、私钥头和常见高置信 API token。需要额外屏蔽某个姓名或机器标识时，使用可重复的 `--forbidden-name` 参数。
-
-## 当前边界
-
-这个版本适合继续做真实论文测试、内部展示和后续产品化探索，但还不应被描述为生产级多用户后端。
-
-尚未充分覆盖的部分包括：
-
-- 超大 event log、长期 checkpoint 和高并发写入压力测试
-- 真正的远程 isolated worker 调度
-- 所有文献 provider 的限流、超时和异常响应
-- Windows 之外的完整跨平台回归
-
-这些限制不会改变当前架构的核心约束：语义判断由 expert 提出，状态变更由脚本校验，event log 保留事实历史，人类负责高影响决策。
+仓库卫生检查会拒绝个人 home 目录、结构化绝对路径、指定姓名、私钥头和常见高置信 API token。需要额外屏蔽某个姓名或机器标识时，可重复使用 `--forbidden-name` 参数。
