@@ -1,8 +1,8 @@
-# Research Paper Suite
+# Provenance-Aware Research Agents
 
 [中文](README_ZH.md) | **English**
 
-Research Paper Suite is an auditable workflow system for the complete research-paper lifecycle. Built around a structured ontology, an append-only event log, deterministic validation, and expert orchestration, it turns paper entities, sources, revisions, and approvals into research state that can be verified, replayed, and handed off.
+Provenance-Aware Research Agents is an auditable workflow system for the complete research-paper lifecycle. Built around a structured ontology, an append-only event log, deterministic validation, and expert orchestration, it turns paper entities, sources, revisions, and approvals into research state that can be verified, replayed, and handed off.
 
 - Current version: `0.2.2`
 - License: [Apache License 2.0](LICENSE)
@@ -37,7 +37,7 @@ Many research-writing agents leave rules, context, and intermediate outputs insi
 - Can the current `paper.yml` be rebuilt from history?
 - Can the work continue after switching agents or platforms?
 
-Research Paper Suite turns those questions into explicit objects, links, events, and gates. Research can continue across sessions, agents, and platforms without losing its provenance or decision history.
+Provenance-Aware Research Agents turns those questions into explicit objects, links, events, and gates. Research can continue across sessions, agents, and platforms without losing its provenance or decision history.
 
 ## Product Principles
 
@@ -395,7 +395,7 @@ The default mode refuses to install over an existing target. `--replace` first c
 
 ## Operational Guarantees
 
-Research Paper Suite maintains consistent, auditable research state through:
+Provenance-Aware Research Agents maintains consistent, auditable research state through:
 
 - an append-only event log that preserves the complete change history
 - projection replay that rebuilds the current `paper.yml`

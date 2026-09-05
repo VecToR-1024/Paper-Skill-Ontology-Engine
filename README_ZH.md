@@ -1,8 +1,8 @@
-# Research Paper Suite
+# Provenance-Aware Research Agents
 
 **中文** | [English](README.md)
 
-Research Paper Suite 是一套面向科研论文全生命周期的可审计工作流系统。它以结构化 ontology、append-only event log、确定性校验和 expert orchestration 为核心，将论文中的对象、来源、修改与审批组织为可验证、可回放、可交接的研究状态。
+Provenance-Aware Research Agents 是一套面向科研论文全生命周期的可审计工作流系统。它以结构化 ontology、append-only event log、确定性校验和 expert orchestration 为核心，将论文中的对象、来源、修改与审批组织为可验证、可回放、可交接的研究状态。
 
 - 当前版本：`0.2.2`
 - 开源协议：[Apache License 2.0](LICENSE)
@@ -32,7 +32,7 @@ acceptance、handoff 和 visualization 提供交付检查
 - 当前 `paper.yml` 能否从历史记录完整重建？
 - 换一个 agent 或平台后，工作状态还能否继续？
 
-Research Paper Suite 把这些问题转化为显式的对象、关系、事件和门禁，让研究流程能够跨会话、跨 agent 和跨平台持续推进，并保持完整的来源与决策记录。
+Provenance-Aware Research Agents 把这些问题转化为显式的对象、关系、事件和门禁，让研究流程能够跨会话、跨 agent 和跨平台持续推进，并保持完整的来源与决策记录。
 
 ## 产品原则
 
@@ -390,7 +390,7 @@ python scripts/install_skill.py <target_skill_dir> --replace
 
 ## 运行保证
 
-Research Paper Suite 通过以下机制保持研究状态的一致性与可审计性：
+Provenance-Aware Research Agents 通过以下机制保持研究状态的一致性与可审计性：
 
 - append-only event log 保留完整变更历史
 - projection replay 可重建当前 `paper.yml`
